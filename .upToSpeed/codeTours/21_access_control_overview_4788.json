@@ -1,0 +1,253 @@
+{
+  "title": "2.1: Access Control: Overview",
+  "id": "9YAISOXcljAH1ror9BC0rxEJZHLn6QI4ML+i9EJyV8Q=",
+  "originalId": 4788,
+  "position": 2,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This walkthrough provides a high-level overview of the **access control mechanism** in the Cap protocol. It covers how **roles** are managed, how **contracts** protect their functions, and how the system enables **granular permissions** for each function on each contract.",
+      "title": "",
+      "id": "57816"
+    },
+    {
+      "type": "textOnly",
+      "description": "Core contracts",
+      "title": "",
+      "id": "57817"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/access/AccessControl.sol"
+      ],
+      "description": "`AccessControl.sol` manages all roles and permissions. It extends **OpenZeppelin's** `AccessControlEnumerableUpgradeable` to inherit standard role functions (`grantRole`, `revokeRole`, `hasRole`) and adds custom wrappers for granular function-level control.",
+      "title": "",
+      "id": "57818"
+    },
+    {
+      "type": "highlight",
+      "description": "During initialization, the contract uses `OpenZeppelin`'s inherited `_grantRole` to assign the default admin role and function-specific roles. The `role()` function creates unique identifiers for each function-contract pair.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 21,
+          "end": 23
+        }
+      ],
+      "title": "",
+      "id": "57819"
+    },
+    {
+      "type": "highlight",
+      "description": "The `grantAccess` function wraps **OpenZeppelin**'s `_grantRole` but adds granular control. Instead of using arbitrary role IDs, it uses function selectors + contract addresses as unique role identifiers.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 27,
+          "end": 30
+        }
+      ],
+      "title": "",
+      "id": "57820"
+    },
+    {
+      "type": "highlight",
+      "description": "The `revokeAccess` function wraps `_revokeRole` with a safety check (line 38) preventing administrators from revoking their own access. The inherited `OpenZeppelin` `revokeRole` function is still available for direct role management.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 33,
+          "end": 41
+        }
+      ],
+      "title": "",
+      "id": "57821"
+    },
+    {
+      "type": "highlight",
+      "description": "The `checkAccess` function acts as a wrapper around `OpenZeppelin`'s `_checkRole`. It serves as the equivalent of the inherited `hasRole` function but for function-contract specific permissions.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 44,
+          "end": 47
+        }
+      ],
+      "title": "",
+      "id": "57822"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/access/Access.sol"
+      ],
+      "description": "`Access.sol` is an abstract contract that other contracts inherit from to protect their functions. It connects to the central `AccessControl` contract and provides the `checkAccess` modifier for easy function protection.",
+      "title": "",
+      "id": "57823"
+    },
+    {
+      "type": "highlight",
+      "description": "The `checkAccess` modifier is the primary mechanism used to protect functions in other contracts. Any function decorated with this modifier automatically verifies caller permissions before execution.",
+      "file": "cap-contracts/contracts/access/Access.sol",
+      "highlight": [
+        {
+          "start": 16,
+          "end": 19
+        }
+      ],
+      "title": "",
+      "id": "57824"
+    },
+    {
+      "type": "highlight",
+      "description": "Here's how contracts inherit from `Access` in practice. The `Delegation` contract extends `Access` to gain access control capabilities.",
+      "file": "cap-contracts/contracts/delegation/Delegation.sol",
+      "highlight": [
+        {
+          "start": 19,
+          "end": 19
+        }
+      ],
+      "title": "",
+      "id": "57825"
+    },
+    {
+      "type": "highlight",
+      "description": "Functions are protected by adding `checkAccess(this.functionName.selector)` to the function signature. This creates a unique permission for this specific function on this specific contract.",
+      "file": "cap-contracts/contracts/delegation/Delegation.sol",
+      "highlight": [
+        {
+          "start": 116,
+          "end": 116
+        }
+      ],
+      "title": "",
+      "id": "57826"
+    },
+    {
+      "type": "textOnly",
+      "description": "Interfaces",
+      "title": "",
+      "id": "57827"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/interfaces/IAccessControl.sol"
+      ],
+      "description": "The `IAccessControl` interface defines the public functions for the access control system. It specifies the external API including initialization, granular access management, and role checking functions.",
+      "title": "",
+      "id": "57828"
+    },
+    {
+      "type": "highlight",
+      "description": "These functions define the custom access control API. Unlike OpenZeppelin's standard `grantRole(bytes32, address)`, these functions take function selectors and contract addresses to create granular permissions.",
+      "file": "cap-contracts/contracts/interfaces/IAccessControl.sol",
+      "highlight": [
+        {
+          "start": 15,
+          "end": 32
+        }
+      ],
+      "title": "",
+      "id": "57829"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/interfaces/IAccess.sol"
+      ],
+      "description": "The `IAccess` interface defines the public functions for the access control system used by inheriting contracts. It specifies the storage structure and error types needed for access control integration.",
+      "title": "",
+      "id": "57830"
+    },
+    {
+      "type": "textOnly",
+      "description": "**Storage utility**",
+      "title": "",
+      "id": "57831"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/storage/AccessStorageUtils.sol"
+      ],
+      "description": "The `AccessStorageUtils` contract defines the storage layout for the access control data. It uses a deterministic storage slot to avoid collisions with other contract storage, enabling safe upgrades.",
+      "title": "",
+      "id": "57832"
+    },
+    {
+      "type": "highlight",
+      "description": "The storage slot is calculated using `keccak256` hashing to ensure it doesn't conflict with other storage variables. The `assembly` block directly assigns the storage slot for gas efficiency.",
+      "file": "cap-contracts/contracts/storage/AccessStorageUtils.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 18
+        }
+      ],
+      "title": "",
+      "id": "57833"
+    },
+    {
+      "type": "textOnly",
+      "description": "Key `functions`",
+      "title": "",
+      "id": "57834"
+    },
+    {
+      "type": "highlight",
+      "description": "The `role` function creates unique role identifiers from a function selector and contract address. This uses bitwise OR to combine the 4-byte selector with the 20-byte address, creating a unique 32-byte identifier for each function-contract pair.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 50,
+          "end": 52
+        }
+      ],
+      "title": "",
+      "id": "57835"
+    },
+    {
+      "type": "mcq",
+      "description": "In `AccessControl.sol`, the `role` function is responsible for generating a unique `roleId` for a given `function selector` and contract address. Based on the implementation, how is this `roleId` constructed?\n\nOptions:\n\n A). It calculates the `keccak256` hash of the concatenated selector and contract address.\n\nB). It performs a bitwise OR operation on the `bytes4` selector and the `address` of the contract, casting both to `bytes32`.\n\nC). It uses a mapping that stores a unique integer ID for each selector-address pair.\n\nD). It delegates the role creation to OpenZeppelin's `DEFAULT_ADMIN_ROLE` to generate a standard identifier.\n\n\nCorrect: B). It performs a bitwise OR operation on the `bytes4` selector and the `address` of the contract, casting both to `bytes32`.\n\nExplanation: The `role` function (line 51) casts the `bytes4` selector and the `uint160` contract address to `bytes32` and then combines them with a bitwise OR (`|`). This is a gas-efficient method for creating a unique identifier within a single `bytes32` slot. Hashing is more gas-intensive, and using a separate mapping for IDs would add storage overhead.",
+      "title": "",
+      "id": "57839",
+      "text": "In `AccessControl.sol`, the `role` function is responsible for generating a unique `roleId` for a given `function selector` and contract address. Based on the implementation, how is this `roleId` constructed?",
+      "answers": [
+        "It calculates the `keccak256` hash of the concatenated selector and contract address.",
+        "It performs a bitwise OR operation on the `bytes4` selector and the `address` of the contract, casting both to `bytes32`.",
+        "It uses a mapping that stores a unique integer ID for each selector-address pair.",
+        "It delegates the role creation to OpenZeppelin's `DEFAULT_ADMIN_ROLE` to generate a standard identifier."
+      ],
+      "correct": 1,
+      "explanation": "The `role` function (line 51) casts the `bytes4` selector and the `uint160` contract address to `bytes32` and then combines them with a bitwise OR (`|`). This is a gas-efficient method for creating a unique identifier within a single `bytes32` slot. Hashing is more gas-intensive, and using a separate mapping for IDs would add storage overhead."
+    },
+    {
+      "type": "highlight",
+      "description": "The internal `_checkAccess` function performs the actual permission check by calling the central `AccessControl.checkAccess` method. If access is denied, it reverts with `AccessDenied` error.",
+      "file": "cap-contracts/contracts/access/Access.sol",
+      "highlight": [
+        {
+          "start": 35,
+          "end": 39
+        }
+      ],
+      "title": "",
+      "id": "57836"
+    },
+    {
+      "type": "textOnly",
+      "description": "System initialization flow: Deploy `AccessControl` → call `initialize(admin)` → deploy contracts inheriting `Access` → call `__Access_init(accessControlAddress)` → functions decorated with `checkAccess(selector)` automatically verify permissions through the central access control system.",
+      "title": "",
+      "id": "57837"
+    },
+    {
+      "type": "textOnly",
+      "description": "The system layers granular function-level permissions on top of `OpenZeppelin`'s battle-tested **role-based access control**. Standard functions like `grantRole`, `revokeRole`, and `hasRole` remain available for direct role management, while the custom wrappers provide per-function permissions across all contracts.",
+      "title": "",
+      "id": "57838"
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "title": "4.1: Oracle: Overview",
+  "id": "nd4KWYo5KMGZJpKFjaXCYHxRiHhThfuB+b5MIGksVkQ=",
+  "originalId": 4793,
+  "position": 9,
+  "steps": [
+    {
+      "type": "highlight",
+      "description": "**Step 1: Main Entry Point** – The `Oracle.sol` contract unifies price and rate oracles into a single upgradeable contract.",
+      "file": "cap-contracts/contracts/oracle/Oracle.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 13
+        }
+      ],
+      "title": "",
+      "id": "60275"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 2: State Variables – The instructions ask for `priceOracle` and `rateOracle` state variables, but none exist. Instead, line 13 shows multiple inheritance from `PriceOracle` and `RateOracle`, merging their storage and functionality directly.",
+      "file": "cap-contracts/contracts/oracle/Oracle.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "60276"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 3: **PriceOracle Contract** – Abstract contract for price data: on-chain payload storage plus off-chain calculation logic via adapters for maximum flexibility.",
+      "file": "cap-contracts/contracts/oracle/PriceOracle.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 12
+        }
+      ],
+      "title": "",
+      "id": "60277"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 4: `getPrice` Function – Retrieves asset price with a **two-tier fallback**: primary adapter call (line 42), then backup adapter if the first returns 0 or is stale (lines 44–48). Guarantees reliability.",
+      "file": "cap-contracts/contracts/oracle/PriceOracle.sol",
+      "highlight": [
+        {
+          "start": 38,
+          "end": 50
+        }
+      ],
+      "title": "",
+      "id": "60278"
+    },
+    {
+      "type": "highlight",
+      "description": "**Adapter Hook** – The private `_getPrice` helper performs a `staticcall` to the specified adapter with the encoded payload, decoding `(price, lastUpdated)` on success.",
+      "file": "cap-contracts/contracts/oracle/PriceOracle.sol",
+      "highlight": [
+        {
+          "start": 82,
+          "end": 89
+        }
+      ],
+      "title": "",
+      "id": "60279"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 5: `RateOracle Contract` – Abstract contract for interest rates: supports **market rates**, **utilization rates**, **benchmark rates**, and **restaker rates** with separate storage mappings.",
+      "file": "cap-contracts/contracts/oracle/RateOracle.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 12
+        }
+      ],
+      "title": "",
+      "id": "60280"
+    },
+    {
+      "type": "highlight",
+      "description": "**Step 6: Rate Functions** – The public functions are `marketRate` (external sources) and `utilizationRate` (on-chain calculations). Both fetch `OracleData` and call the shared helper `_getRate`.",
+      "file": "cap-contracts/contracts/oracle/RateOracle.sol",
+      "highlight": [
+        {
+          "start": 44,
+          "end": 53
+        }
+      ],
+      "title": "",
+      "id": "60281"
+    },
+    {
+      "type": "highlight",
+      "description": "**Adapter Hook** – The private `_getRate` helper uses a low-level `call` to execute adapter logic (non-view), decoding a single `uint256 rate` on success.",
+      "file": "cap-contracts/contracts/oracle/RateOracle.sol",
+      "highlight": [
+        {
+          "start": 89,
+          "end": 92
+        }
+      ],
+      "title": "",
+      "id": "60282"
+    },
+    {
+      "type": "mcq",
+      "description": "In `PriceOracle.sol` and `RateOracle.sol`, the helper functions `_getPrice` and `_getRate` both execute external adapter code. What is the fundamental difference in their execution methods?\n\nOptions:\n\n A). `_getPrice` uses `staticcall` for read-only operations, while `_getRate` uses `call`, allowing for state-modifying operations.\n\nB). `_getPrice` is an external function, while `_getRate` is a private function.\n\nC). `_getPrice` handles a backup adapter if the primary fails, while `_getRate` reverts immediately on failure.\n\n\nCorrect: A). `_getPrice` uses `staticcall` for read-only operations, while `_getRate` uses `call`, allowing for state-modifying operations.\n\nExplanation: This seems right. The key difference is the opcode used. `_getPrice` uses `staticcall` (line 87 in `PriceOracle.sol`), which is appropriate for reading data without changing state. `_getRate` uses `call` (line 90 in `RateOracle.sol`), which is more general and allows adapters to potentially update their own state if needed, for instance, in a utilization rate calculation that depends on on-chain data that might need updating. The other options describe differences in the public-facing functions (`getPrice` vs. `marketRate`) or are factually incorrect (`_getPrice` is private), not the core execution method of the helper functions themselves.",
+      "title": "",
+      "id": "60286",
+      "text": "In `PriceOracle.sol` and `RateOracle.sol`, the helper functions `_getPrice` and `_getRate` both execute external adapter code. What is the fundamental difference in their execution methods?",
+      "answers": [
+        "`_getPrice` uses `staticcall` for read-only operations, while `_getRate` uses `call`, allowing for state-modifying operations.",
+        "`_getPrice` is an external function, while `_getRate` is a private function.",
+        "`_getPrice` handles a backup adapter if the primary fails, while `_getRate` reverts immediately on failure."
+      ],
+      "correct": 0,
+      "explanation": "This seems right. The key difference is the opcode used. `_getPrice` uses `staticcall` (line 87 in `PriceOracle.sol`), which is appropriate for reading data without changing state. `_getRate` uses `call` (line 90 in `RateOracle.sol`), which is more general and allows adapters to potentially update their own state if needed, for instance, in a utilization rate calculation that depends on on-chain data that might need updating. The other options describe differences in the public-facing functions (`getPrice` vs. `marketRate`) or are factually incorrect (`_getPrice` is private), not the core execution method of the helper functions themselves."
+    },
+    {
+      "type": "textOnly",
+      "description": "Step 7: Adapter Libraries Directory – The `contracts/oracle/libraries` folder contains:\n\n- `AaveAdapter.sol`\n- `CapTokenAdapter.sol`\n- `ChainlinkAdapter.sol`\n- `StakedCapAdapter.sol`\n- `VaultAdapter.sol`\n\nEach adapter implements a `price(...)` or `rate(...)` function to fetch data from its respective source.",
+      "title": "",
+      "id": "60283"
+    },
+    {
+      "type": "highlight",
+      "description": "**Adapter Example** – `ChainlinkAdapter.price` fetches and normalizes Chainlink feed data to 8 decimals (lines 19–20) and handles negative answers safely (line 18). The payload is simply the `aggregator’s address`.",
+      "file": "cap-contracts/contracts/oracle/libraries/ChainlinkAdapter.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 21
+        }
+      ],
+      "title": "",
+      "id": "60284"
+    },
+    {
+      "type": "textOnly",
+      "description": "Summary – The Oracle system:\n\n1. `Oracle.sol` inherits `PriceOracle` and `RateOracle` (no separate instances).\n2. `PriceOracle.getPrice` and `RateOracle.marketRate`/`RateOracle.utilizationRate` delegate work via `_getPrice`/`_getRate` adapters.\n3. Adapters live in `contracts/oracle/libraries`, isolating source-specific logic.\n4. This architecture delivers **flexibility** (swap or add sources), **reliability** (**fallbacks**), **upgradability** (**UUPS proxy**), and **modularity** (clear separation of concerns).",
+      "title": "",
+      "id": "60285"
+    }
+  ]
+}

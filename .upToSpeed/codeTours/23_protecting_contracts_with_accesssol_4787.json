@@ -1,0 +1,174 @@
+{
+  "title": "2.3: Protecting Contracts with `Access.sol`",
+  "id": "kGFV2THgp9QScdPB4KsDNtkY6AATzz2a1HrJUs2vowY=",
+  "originalId": 4787,
+  "position": 4,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Welcome to this walkthrough of `Access.sol` - the contract that provides access control protection for other contracts in the Cap Labs ecosystem. We'll explore how it works and how other contracts use it to enforce permissions.",
+      "title": "",
+      "id": "57155"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/access/Access.sol"
+      ],
+      "description": "Let's start with `Access.sol` itself. This is an **abstract contract** that provides inheritable access control functionality. Notice on line 13 that it's declared as `abstract contract Access`, meaning it cannot be deployed directly but must be inherited by other contracts.",
+      "title": "",
+      "id": "57156"
+    },
+    {
+      "type": "highlight",
+      "description": "The core of `Access.sol` is the `checkAccess` modifier. This modifier takes a `bytes4 _selector` parameter (typically `msg.sig`) and calls the internal `_checkAccess` function before executing the protected function.",
+      "file": "cap-contracts/contracts/access/Access.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 19
+        }
+      ],
+      "title": "",
+      "id": "57157"
+    },
+    {
+      "type": "highlight",
+      "description": "Here's the internal `_checkAccess` function that does the actual permission checking. On line 36-37, it retrieves the `AccessControl` contract address from storage and calls `checkAccess` on it, passing the function selector, the current contract address, and the caller (`msg.sender`). If access is denied, it reverts with `AccessDenied()`.",
+      "file": "cap-contracts/contracts/access/Access.sol",
+      "highlight": [
+        {
+          "start": 33,
+          "end": 39
+        }
+      ],
+      "title": "",
+      "id": "57158"
+    },
+    {
+      "type": "highlight",
+      "description": "The `Access` contract includes initialization functions that set up the connection to the `AccessControl` contract. The `__Access_init` function stores the `AccessControl` address in the contract's storage for later use by the `_checkAccess` function.",
+      "file": "cap-contracts/contracts/access/Access.sol",
+      "highlight": [
+        {
+          "start": 21,
+          "end": 31
+        }
+      ],
+      "title": "",
+      "id": "57159"
+    },
+    {
+      "type": "textOnly",
+      "description": "Now let's see how other contracts use `Access.sol` in practice. The `Lender` contract is a perfect example of how to implement access-controlled functions.",
+      "title": "",
+      "id": "57160"
+    },
+    {
+      "type": "highlight",
+      "description": "The `Lender` contract inherits from `Access` (among other contracts). This gives it access to the `checkAccess` modifier and access control functionality.",
+      "file": "cap-contracts/contracts/lendingPool/Lender.sol",
+      "highlight": [
+        {
+          "start": 19,
+          "end": 19
+        }
+      ],
+      "title": "",
+      "id": "57161"
+    },
+    {
+      "type": "highlight",
+      "description": "Here's a practical example of the modifier in action. The `addAsset` function is protected by `checkAccess`.\n\nThe argument passed to the modifier, `this.addAsset.selector`, provides the unique 4-byte selector for the `addAsset` function. This is the identifier the modifier will use to check for the required role.",
+      "file": "cap-contracts/contracts/lendingPool/Lender.sol",
+      "highlight": [
+        {
+          "start": 105,
+          "end": 108
+        }
+      ],
+      "title": "",
+      "id": "57162"
+    },
+    {
+      "type": "highlight",
+      "description": "Multiple functions in the `Lender` contract use the `checkAccess` modifier with their respective `function selectors`. Each function that needs permission control simply adds the modifier with its own `selector`.",
+      "file": "cap-contracts/contracts/lendingPool/Lender.sol",
+      "highlight": [
+        {
+          "start": 111,
+          "end": 126
+        }
+      ],
+      "title": "",
+      "id": "57163"
+    },
+    {
+      "type": "highlight",
+      "description": "Even the upgrade authorization function uses access control. Notice it uses `bytes4(0)` as the selector, which is a special case for upgrade permissions.",
+      "file": "cap-contracts/contracts/lendingPool/Lender.sol",
+      "highlight": [
+        {
+          "start": 274,
+          "end": 274
+        }
+      ],
+      "title": "",
+      "id": "57164"
+    },
+    {
+      "type": "textOnly",
+      "description": "Let's understand how the `Access` contract knows where to find the `AccessControl` contract. This is handled through a storage utility system.",
+      "title": "",
+      "id": "57165"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/interfaces/IAccess.sol"
+      ],
+      "description": "The `IAccess` interface defines the `AccessStorage` struct that contains the `accessControl` address. This is the key piece of data that connects the `Access` contract to the `AccessControl` contract.",
+      "title": "",
+      "id": "57166"
+    },
+    {
+      "type": "highlight",
+      "description": "The `AccessStorageUtils` contract provides the storage mechanism. It uses a specific storage slot (line 11) to store the `AccessStorage` struct. The `getAccessStorage()` function returns a reference to this storage location using inline assembly.",
+      "file": "cap-contracts/contracts/storage/AccessStorageUtils.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 20
+        }
+      ],
+      "title": "",
+      "id": "57167"
+    },
+    {
+      "type": "textOnly",
+      "description": "Here's how the complete flow works: When a protected function is called, the `checkAccess` modifier executes → It calls `_checkAccess` with the function selector → `_checkAccess` retrieves the `AccessControl` contract address from storage → It calls `checkAccess` on the `AccessControl` contract → The `AccessControl` contract verifies if the caller has the required role for that function on that contract → If access is granted, execution continues; if denied, the transaction reverts.",
+      "title": "",
+      "id": "57168"
+    },
+    {
+      "type": "mcq",
+      "description": "When an external account calls the `addAsset` function on the `Lender` contract, the `checkAccess` modifier is triggered. What arguments are ultimately passed to the `IAccessControl.checkAccess` function by `Access.sol`?\n\nOptions:\n\n A). `_selector`: `this.addAsset.selector`, `_target`: `address(this)`, `_caller`: `msg.sender`\n\nB). `_selector`: `this.addAsset.selector`, `_target`: `getAccessStorage().accessControl`, `_caller`: `msg.sender`\n\nC). `_selector`: `this.addAsset.selector`, `_target`: `address(this)`, `_caller`: `address(this)`\n\n\nCorrect: A). `_selector`: `this.addAsset.selector`, `_target`: `address(this)`, `_caller`: `msg.sender`\n\nExplanation: The `_checkAccess` function in `Access.sol` passes three arguments to `IAccessControl.checkAccess`. The `_selector` is the function signature passed to the modifier (`this.addAsset.selector`). The `_target` is the address of the contract being protected (`address(this)`, which is the `Lender` contract instance). The `_caller` is the original initiator of the call (`msg.sender`). The other options incorrectly identify the target as the `AccessControl` contract or the caller as the `Lender` contract itself.",
+      "title": "",
+      "id": "57170",
+      "text": "When an external account calls the `addAsset` function on the `Lender` contract, the `checkAccess` modifier is triggered. What arguments are ultimately passed to the `IAccessControl.checkAccess` function by `Access.sol`?",
+      "answers": [
+        "`_selector`: `this.addAsset.selector`, `_target`: `address(this)`, `_caller`: `msg.sender`",
+        "`_selector`: `this.addAsset.selector`, `_target`: `getAccessStorage().accessControl`, `_caller`: `msg.sender`",
+        "`_selector`: `this.addAsset.selector`, `_target`: `address(this)`, `_caller`: `address(this)`"
+      ],
+      "correct": 0,
+      "explanation": "The `_checkAccess` function in `Access.sol` passes three arguments to `IAccessControl.checkAccess`. The `_selector` is the function signature passed to the modifier (`this.addAsset.selector`). The `_target` is the address of the contract being protected (`address(this)`, which is the `Lender` contract instance). The `_caller` is the original initiator of the call (`msg.sender`). The other options incorrectly identify the target as the `AccessControl` contract or the caller as the `Lender` contract itself."
+    },
+    {
+      "type": "textOnly",
+      "description": "This design allows any contract to inherit from `Access` and immediately gain sophisticated role-based access control by simply adding the `checkAccess` modifier to functions that need protection. The `AccessControl` contract handles all the role management logic, while `Access.sol` provides the convenient integration layer.",
+      "title": "",
+      "id": "57169"
+    }
+  ]
+}

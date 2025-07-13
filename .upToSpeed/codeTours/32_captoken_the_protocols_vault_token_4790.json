@@ -1,0 +1,179 @@
+{
+  "title": "3.2: CapToken: The Protocol’s Vault Token",
+  "id": "shMIlz0FlbeK50B6ivIfkX+8ZrsewINWzXLca5mlqEo=",
+  "originalId": 4790,
+  "position": 6,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Welcome to the `CapToken` walkthrough! `CapToken` is the core token contract of the `Cap Finance` protocol. It's not just a simple `ERC-20 token`, but a sophisticated vault that manages a basket of underlying assets. Let's explore how it works.",
+      "title": "",
+      "id": "57171"
+    },
+    {
+      "type": "highlight",
+      "description": "The CapToken contract inherits from two key contracts: `UUPSUpgradeable` for upgradeability and `Vault` for core functionality. This inheritance makes CapToken a full-featured vault that can hold a basket of underlying assets, not just a simple token. The **UUPS pattern** allows the contract to be upgraded while maintaining its state.",
+      "file": "cap-contracts/contracts/token/CapToken.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 10
+        }
+      ],
+      "title": "",
+      "id": "57172"
+    },
+    {
+      "type": "highlight",
+      "description": "The `initialize` function sets up the CapToken with its initial parameters. The `_name` and `_symbol` define the token identity, `_accessControl` manages permissions, `_feeAuction` handles fee distribution, `_oracle` provides price data, `_assets` defines the basket of supported collateral assets, and `_insuranceFund` receives protocol fees for risk management.",
+      "file": "cap-contracts/contracts/token/CapToken.sol",
+      "highlight": [
+        {
+          "start": 24,
+          "end": 32
+        }
+      ],
+      "title": "",
+      "id": "57173"
+    },
+    {
+      "type": "highlight",
+      "description": "The Vault contract is where the real functionality comes from. It inherits from multiple contracts: `IVault` defines the interface, `ERC20PermitUpgradeable` provides standard token functionality with permit support, `PausableUpgradeable` enables emergency stops, `Access` manages permissions, `Minter` handles dynamic fees, `FractionalReserve` manages yield generation, and `VaultStorageUtils` provides storage utilities.",
+      "file": "cap-contracts/contracts/vault/Vault.sol",
+      "highlight": [
+        {
+          "start": 21,
+          "end": 28
+        }
+      ],
+      "title": "",
+      "id": "57174"
+    },
+    {
+      "type": "highlight",
+      "description": "The `mint` function allows users to deposit assets and receive `CapTokens`. On line 39, it calls `getMintAmount` to calculate the output amount and dynamic fees. Lines 40-51 use `VaultLogic.mint` to update the vault state, then line 52 mints the calculated tokens to the receiver. Line 53 mints any fees to the insurance fund. This ensures proper accounting of both user tokens and protocol fees.",
+      "file": "cap-contracts/contracts/vault/Vault.sol",
+      "highlight": [
+        {
+          "start": 33,
+          "end": 54
+        }
+      ],
+      "title": "",
+      "id": "57175"
+    },
+    {
+      "type": "highlight",
+      "description": "The `burn` function allows users to exchange `CapTokens` for a specific asset. Line 63 calculates the output amount and fees using `getBurnAmount`. Line 64 calls `divest` to withdraw assets from yield-generating positions. Lines 65-76 handle the burn logic, and line 77 burns the `CapTokens` from the sender. This asymmetric approach lets users choose which asset to receive.",
+      "file": "cap-contracts/contracts/vault/Vault.sol",
+      "highlight": [
+        {
+          "start": 57,
+          "end": 78
+        }
+      ],
+      "title": "",
+      "id": "57176"
+    },
+    {
+      "type": "highlight",
+      "description": "The `redeem` function burns `CapTokens` for a proportional share of all assets in the basket. Line 87 calculates outputs for all assets using `getRedeemAmount`. Lines 88-93 prepare the total amounts to divest including fees. Line 93 divests from all assets simultaneously, and line 105 burns the `CapTokens`. This approach avoids the dynamic fees that mint/burn incur.",
+      "file": "cap-contracts/contracts/vault/Vault.sol",
+      "highlight": [
+        {
+          "start": 81,
+          "end": 106
+        }
+      ],
+      "title": "",
+      "id": "57177"
+    },
+    {
+      "type": "mcq",
+      "description": "What is the primary functional difference between the `burn` and `redeem` functions in the `Vault` contract?\n\nOptions:\n\n A). The `burn` function applies dynamic fees based on basket imbalance, while the `redeem` function is a fee-free operation.\n\nB). The `burn` function is a permissionless operation for any token holder, while the `redeem` function requires a specific role granted by the `Access` contract.\n\nC). The `burn` function exchanges CapTokens for a single specified underlying asset, while the `redeem` function exchanges them for a proportional share of all assets in the vault.\n\nD). The `burn` function permanently destroys the user's tokens, while the `redeem` function transfers the user's tokens to the protocol's insurance fund.\n\n\nCorrect: C). The `burn` function exchanges CapTokens for a single specified underlying asset, while the `redeem` function exchanges them for a proportional share of all assets in the vault.\n\nExplanation: The correct answer distinguishes the core mechanism of the two functions. The `burn` function allows a user to withdraw a single asset of their choice from the vault, with fees designed to incentivize rebalancing. In contrast, the `redeem` function allows a user to withdraw their proportional share of *all* assets in the vault's basket. Both functions are permissionless for token holders, both have fees (though calculated differently), and both ultimately burn the user's CapTokens.",
+      "title": "",
+      "id": "57194",
+      "text": "What is the primary functional difference between the `burn` and `redeem` functions in the `Vault` contract?",
+      "answers": [
+        "The `burn` function applies dynamic fees based on basket imbalance, while the `redeem` function is a fee-free operation.",
+        "The `burn` function is a permissionless operation for any token holder, while the `redeem` function requires a specific role granted by the `Access` contract.",
+        "The `burn` function exchanges CapTokens for a single specified underlying asset, while the `redeem` function exchanges them for a proportional share of all assets in the vault.",
+        "The `burn` function permanently destroys the user's tokens, while the `redeem` function transfers the user's tokens to the protocol's insurance fund."
+      ],
+      "correct": 2,
+      "explanation": "The correct answer distinguishes the core mechanism of the two functions. The `burn` function allows a user to withdraw a single asset of their choice from the vault, with fees designed to incentivize rebalancing. In contrast, the `redeem` function allows a user to withdraw their proportional share of *all* assets in the vault's basket. Both functions are permissionless for token holders, both have fees (though calculated differently), and both ultimately burn the user's CapTokens."
+    },
+    {
+      "type": "highlight",
+      "description": "The `borrow` and `repay` functions are access-controlled operations for covered agents. Line 112 shows `borrow` requires the `checkAccess` modifier with the function selector, meaning only authorized agents can borrow. Similarly, line 119 shows `repay` has the same access control. These functions enable the lending functionality of the protocol.",
+      "file": "cap-contracts/contracts/vault/Vault.sol",
+      "highlight": [
+        {
+          "start": 109,
+          "end": 121
+        }
+      ],
+      "title": "",
+      "id": "57178"
+    },
+    {
+      "type": "highlight",
+      "description": "The dynamic fee system is implemented in the `Minter contract`. `getMintAmount` and `getBurnAmount` calculate fees based on how the operation affects the asset basket balance. The fees discourage actions that would make the basket more imbalanced and encourage actions that rebalance it. This creates economic incentives for maintaining a healthy asset distribution.",
+      "file": "cap-contracts/contracts/vault/Minter.sol",
+      "highlight": [
+        {
+          "start": 43,
+          "end": 53
+        }
+      ],
+      "title": "",
+      "id": "57179"
+    },
+    {
+      "type": "highlight",
+      "description": "The ICapToken interface composes four key interfaces: `IERC20` provides standard token functionality for balances and transfers, `IVault` enables supply/borrow operations, `IMinter` handles fee configuration and calculation, and `IFractionalReserve` manages yield generation through invest/divest operations. This composition makes **CapToken** a complete DeFi primitive.",
+      "file": "cap-contracts/contracts/interfaces/ICapToken.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 12
+        }
+      ],
+      "title": "",
+      "id": "57180"
+    },
+    {
+      "type": "mcq",
+      "description": "The `_authorizeUpgrade` function uses `checkAccess(bytes4(0))`. What specific permission does this check require for an upgrade to proceed?\n\nOptions:\n\n A). The caller must hold a specific UPGRADER_ROLE.\n\nB). The caller must hold the DEFAULT_ADMIN_ROLE.\n\nC). The caller must be the address designated as the oracle.\n\n\nCorrect: B). The caller must hold the DEFAULT_ADMIN_ROLE.\n\nExplanation: This is a good observation. The `checkAccess(bytes4(0))` pattern is a convention used here to verify the caller has the `DEFAULT_ADMIN_ROLE`. While a system could define a specific `UPGRADER_ROLE`, this contract uses the highest-level admin role for upgrades. The oracle address is used for price data and does not have administrative privileges for upgrades.",
+      "title": "",
+      "id": "57195",
+      "text": "The `_authorizeUpgrade` function uses `checkAccess(bytes4(0))`. What specific permission does this check require for an upgrade to proceed?",
+      "answers": [
+        "The caller must hold a specific UPGRADER_ROLE.",
+        "The caller must hold the DEFAULT_ADMIN_ROLE.",
+        "The caller must be the address designated as the oracle."
+      ],
+      "correct": 1,
+      "explanation": "This is a good observation. The `checkAccess(bytes4(0))` pattern is a convention used here to verify the caller has the `DEFAULT_ADMIN_ROLE`. While a system could define a specific `UPGRADER_ROLE`, this contract uses the highest-level admin role for upgrades. The oracle address is used for price data and does not have administrative privileges for upgrades."
+    },
+    {
+      "type": "highlight",
+      "description": "This function is the security gatekeeper for contract upgrades. The `checkAccess` modifier ensures that the caller has the `DEFAULT_ADMIN_ROLE`, meaning only addresses with the highest admin privileges can upgrade the contract. This is a critical security mechanism since upgrades can completely change the contract's behavior.",
+      "file": "cap-contracts/contracts/token/CapToken.sol",
+      "highlight": [
+        {
+          "start": 38,
+          "end": 38
+        }
+      ],
+      "title": "",
+      "id": "57181"
+    },
+    {
+      "type": "textOnly",
+      "description": "`CapToken` is a sophisticated vault token that combines `ERC-20` functionality with dynamic fee mechanisms, yield generation, and lending capabilities. Whenever users `mint` or `burn` `CapTokens`, they're interacting with a complex system that manages asset baskets, calculates dynamic fees, and affects the yields available to other protocol participants like `StakedCap` stakers.",
+      "title": "",
+      "id": "57182"
+    }
+  ]
+}

@@ -1,0 +1,230 @@
+{
+  "title": "1.1: High-Level Overview",
+  "id": "8cEmytZaUBkxXjAEv8j6Q/IiS1IEXLlHEI4JMqImUdo=",
+  "originalId": 4784,
+  "position": 1,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Welcome to this tour of the `Cap Protocol`! We'll explore how this decentralized lending protocol works, where whitelisted **operators** (also called **covered agents**) can borrow assets against delegated collateral from external restaking protocols like `Symbiotic`.",
+      "title": "",
+      "id": "57750"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/vault/Vault.sol"
+      ],
+      "description": "The `Vault` contract is the heart of the Cap Protocol. This is where all the underlying assets are held and managed. Notice on line 21 how it inherits from multiple contracts - this **composition pattern** gives it its full functionality.",
+      "title": "",
+      "id": "57751"
+    },
+    {
+      "type": "highlight",
+      "description": "The Vault's capabilities come from inheritance. It's an **ERC20** token itself (representing shares), includes access control, minting logic, and fractional reserve functionality. The `Minter` and `FractionalReserve` contracts provide the core business logic we'll see in later tours.",
+      "file": "cap-contracts/contracts/vault/Vault.sol",
+      "highlight": [
+        {
+          "start": 21,
+          "end": 28
+        }
+      ],
+      "title": "",
+      "id": "57752"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/token/CapToken.sol"
+      ],
+      "description": "The `CapToken` is the share token that users receive when they deposit assets. It's a simple wrapper around the `Vault` contract, representing a user's proportional share of the underlying assets held in the protocol.",
+      "title": "",
+      "id": "57753"
+    },
+    {
+      "type": "highlight",
+      "description": "`CapToken` is elegantly simple - it inherits all its functionality from the `Vault` contract. When users deposit assets like `USDC` or `USDT`, they receive `CapTokens` representing their proportional share of the protocol's assets.",
+      "file": "cap-contracts/contracts/token/CapToken.sol",
+      "highlight": [
+        {
+          "start": 7,
+          "end": 10
+        }
+      ],
+      "title": "",
+      "id": "57754"
+    },
+    {
+      "type": "textOnly",
+      "description": "Now let's explore the lending side of the protocol. This is where `operators` (covered agents) - whitelisted institutional borrowers - can take out loans against their delegated collateral.",
+      "title": "",
+      "id": "57755"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/lendingPool/Lender.sol"
+      ],
+      "description": "The `Lender` contract manages all borrowing and liquidation logic. This is where operators come to borrow assets from the protocol's reserves, and where liquidations are processed when loans become unhealthy.",
+      "title": "",
+      "id": "57756"
+    },
+    {
+      "type": "highlight",
+      "description": "The `borrow` function is the main entry point for operators to take out loans. Notice how it takes the operator's address (`msg.sender`), the asset they want to borrow, and the amount. The actual borrowing logic is delegated to the `BorrowLogic` library.",
+      "file": "cap-contracts/contracts/lendingPool/Lender.sol",
+      "highlight": [
+        {
+          "start": 55,
+          "end": 66
+        }
+      ],
+      "title": "",
+      "id": "57757"
+    },
+    {
+      "type": "textOnly",
+      "description": "What makes `Cap Protocol` unique is that loans are secured not by direct deposits, but by collateral delegated through external restaking protocols like `Symbiotic`. Let's see how this works.",
+      "title": "",
+      "id": "57758"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/delegation/Delegation.sol"
+      ],
+      "description": "The `Delegation` contract is the central hub for managing operators and the networks they use for collateral. It tracks which operators are registered and their collateral through external restaking protocols.",
+      "title": "",
+      "id": "57759"
+    },
+    {
+      "type": "highlight",
+      "description": "The `addAgent` function (line 76) is how operators are registered in the system. Each operator is associated with a specific network (like `Symbiotic`), and has **loan-to-value (LTV)** and **liquidation threshold** parameters that determine their borrowing capacity.",
+      "file": "cap-contracts/contracts/delegation/Delegation.sol",
+      "highlight": [
+        {
+          "start": 76,
+          "end": 94
+        }
+      ],
+      "title": "",
+      "id": "57760"
+    },
+    {
+      "type": "textOnly",
+      "description": "Now let's trace the liquidation flow - what happens when an operator's loan becomes unhealthy and needs to be liquidated. This involves three key steps across different contracts.",
+      "title": "",
+      "id": "57761"
+    },
+    {
+      "type": "highlight",
+      "description": "**Step 1:** The liquidation process begins in the `Lender` contract. When an operator's loan becomes unhealthy, anyone can call the `liquidate` function. This function validates the liquidation and calls the underlying `LiquidationLogic` to handle the details.",
+      "file": "cap-contracts/contracts/lendingPool/Lender.sol",
+      "highlight": [
+        {
+          "start": 97,
+          "end": 102
+        }
+      ],
+      "title": "",
+      "id": "57762"
+    },
+    {
+      "type": "highlight",
+      "description": "**Step 2:** The liquidation process continues in the `Delegation` contract. The `slash` function (line 39) is called to begin seizing the operator's delegated collateral. It calculates the slash share and calls the specific network middleware to execute the slashing.",
+      "file": "cap-contracts/contracts/delegation/Delegation.sol",
+      "highlight": [
+        {
+          "start": 39,
+          "end": 52
+        }
+      ],
+      "title": "",
+      "id": "57763"
+    },
+    {
+      "type": "highlight",
+      "description": "**Step 3:** Finally, the `SymbioticNetworkMiddleware` contract executes the actual slashing. Lines 105-108 show the key actions: calling the Symbiotic slasher to slash the collateral, triggering the transfer via the burner router, and transferring the slashed collateral to the liquidator.",
+      "file": "cap-contracts/contracts/delegation/providers/symbiotic/SymbioticNetworkMiddleware.sol",
+      "highlight": [
+        {
+          "start": 86,
+          "end": 111
+        }
+      ],
+      "title": "",
+      "id": "57764"
+    },
+    {
+      "type": "mcq",
+      "description": "When an agent's position becomes unhealthy, a liquidator initiates the process. What is the correct sequence of primary function calls across the core contracts to slash the agent's collateral?\n\nOptions:\n\n A). `Lender.liquidate()` → `Delegation.slash()` → `SymbioticNetworkMiddleware.slash()`\n\nB). `Delegation.slash()` → `Lender.liquidate()` → `SymbioticNetworkMiddleware.slash()`\n\nC). `Lender.liquidate()` → `Vault.repay()` → `Delegation.slash()`\n\nD). `SymbioticNetworkMiddleware.slash()` → `Delegation.slash()` → `Lender.liquidate()`\n\n\nCorrect: A). `Lender.liquidate()` → `Delegation.slash()` → `SymbioticNetworkMiddleware.slash()`\n\nExplanation: The liquidation process begins in the `Lender` contract, which manages the loan and determines if a position is unhealthy. From there, it calls the `Delegation` contract, which is responsible for managing collateral sources. Finally, `Delegation` calls the appropriate network middleware, such as `SymbioticNetworkMiddleware`, to execute the slash on the external restaking protocol.",
+      "title": "",
+      "id": "57771",
+      "text": "When an agent's position becomes unhealthy, a liquidator initiates the process. What is the correct sequence of primary function calls across the core contracts to slash the agent's collateral?",
+      "answers": [
+        "`Lender.liquidate()` → `Delegation.slash()` → `SymbioticNetworkMiddleware.slash()`",
+        "`Delegation.slash()` → `Lender.liquidate()` → `SymbioticNetworkMiddleware.slash()`",
+        "`Lender.liquidate()` → `Vault.repay()` → `Delegation.slash()`",
+        "`SymbioticNetworkMiddleware.slash()` → `Delegation.slash()` → `Lender.liquidate()`"
+      ],
+      "correct": 0,
+      "explanation": "The liquidation process begins in the `Lender` contract, which manages the loan and determines if a position is unhealthy. From there, it calls the `Delegation` contract, which is responsible for managing collateral sources. Finally, `Delegation` calls the appropriate network middleware, such as `SymbioticNetworkMiddleware`, to execute the slash on the external restaking protocol."
+    },
+    {
+      "type": "textOnly",
+      "description": "The protocol relies on two critical supporting systems to function properly: **oracles** for data feeds and **access control** for security. Let's examine these pillars.",
+      "title": "",
+      "id": "57765"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/oracle/Oracle.sol"
+      ],
+      "description": "The `Oracle` contract provides the protocol with reliable price and interest rate data. For liquidations and borrowing decisions to work correctly, the system needs accurate, up-to-date information about asset prices and rates.",
+      "title": "",
+      "id": "57766"
+    },
+    {
+      "type": "highlight",
+      "description": "The Oracle unifies both price and rate data into a single contract. It inherits from `PriceOracle` and `RateOracle`, providing a unified interface for all the protocol's data feed needs.",
+      "file": "cap-contracts/contracts/oracle/Oracle.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 13
+        }
+      ],
+      "title": "",
+      "id": "57767"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/access/AccessControl.sol"
+      ],
+      "description": "The `AccessControl` contract secures the entire protocol using a granular, role-based permission system. Every sensitive function in the protocol is protected by specific roles, ensuring only authorized parties can perform critical operations.",
+      "title": "",
+      "id": "57768"
+    },
+    {
+      "type": "highlight",
+      "description": "The `role` function creates unique permission IDs by combining a function selector with a contract address. This allows for extremely granular access control - each function on each contract can have its own specific permissions, preventing unauthorized actions across the protocol.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 50,
+          "end": 52
+        }
+      ],
+      "title": "",
+      "id": "57769"
+    },
+    {
+      "type": "textOnly",
+      "description": "You've completed the high-level tour of **Cap Protocol**! We've seen how the main components work together: the `Vault` holds assets, the `Lender` manages loans, `Delegation` manages collateral, `Oracle` provides data, and `AccessControl` provides security. The following tours will dive deep into each of these components to show you exactly how they implement these lending mechanics.",
+      "title": "",
+      "id": "57770"
+    }
+  ]
+}

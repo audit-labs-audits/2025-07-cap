@@ -1,0 +1,182 @@
+{
+  "title": "4.2: Oracle: PriceOracle",
+  "id": "nLLyuryul3kPTubSgMxM2YVdnLxeFP5rJJPlqsA3h7c=",
+  "originalId": 4792,
+  "position": 10,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Welcome to the `PriceOracle.sol` walkthrough! We'll explore how this contract manages price data for different assets using a flexible adapter system with primary and backup oracle configurations.",
+      "title": "",
+      "id": "57915"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/oracle/PriceOracle.sol"
+      ],
+      "description": "This is the main `PriceOracle` contract that provides price data for assets. It uses an **adapter pattern** to support different oracle sources and includes backup mechanisms for reliability.",
+      "title": "",
+      "id": "57916"
+    },
+    {
+      "type": "highlight",
+      "description": "The `PriceOracleStorageUtils` contract provides a utility to access the storage location. It uses a deterministic `storage slot` (line 11) and assembly to return a storage pointer to the `PriceOracleStorage` struct.",
+      "file": "cap-contracts/contracts/storage/PriceOracleStorageUtils.sol",
+      "highlight": [
+        {
+          "start": 13,
+          "end": 19
+        }
+      ],
+      "title": "",
+      "id": "57917"
+    },
+    {
+      "type": "highlight",
+      "description": "The `PriceOracleStorage` struct defines the core data structure. Each asset has **primary oracle data**, **backup oracle data**, and a **staleness threshold**. This dual-oracle approach ensures reliability - if the primary oracle fails or becomes stale, the backup can be used.",
+      "file": "cap-contracts/contracts/interfaces/IPriceOracle.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 18
+        }
+      ],
+      "title": "",
+      "id": "57918"
+    },
+    {
+      "type": "textOnly",
+      "description": "Note: The query mentions an `Adapter struct` and `adapters mapping` in `PriceOracle.sol`, but these don't exist in the codebase. Instead, the system uses the `OracleData struct` to configure adapters for each asset.",
+      "title": "",
+      "id": "57919"
+    },
+    {
+      "type": "highlight",
+      "description": "The `OracleData` struct represents the adapter configuration. It contains an `adapter address` that handles the price calculation logic, and a `payload` with the encoded data needed by that adapter. This flexible design allows different oracle sources to be plugged in.",
+      "file": "cap-contracts/contracts/interfaces/IOracleTypes.sol",
+      "highlight": [
+        {
+          "start": 11,
+          "end": 14
+        }
+      ],
+      "title": "",
+      "id": "57920"
+    },
+    {
+      "type": "highlight",
+      "description": "The `getPrice` function implements the core price fetching logic. It first retrieves the primary oracle data (**line 40**), then attempts to get the price (**line 42**). If the `price` is zero or stale (**line 44**), it falls back to the backup oracle data (**lines 45-48**).",
+      "file": "cap-contracts/contracts/oracle/PriceOracle.sol",
+      "highlight": [
+        {
+          "start": 38,
+          "end": 50
+        }
+      ],
+      "title": "",
+      "id": "57921"
+    },
+    {
+      "type": "highlight",
+      "description": "The `_getPrice` helper function performs the actual price calculation by making a static call to the adapter with the provided payload. It uses a **try-catch** pattern by checking the success flag and safely decoding the returned data.",
+      "file": "cap-contracts/contracts/oracle/PriceOracle.sol",
+      "highlight": [
+        {
+          "start": 82,
+          "end": 89
+        }
+      ],
+      "title": "",
+      "id": "57922"
+    },
+    {
+      "type": "highlight",
+      "description": "The `_isStale` function checks if a price is too old by comparing the time elapsed since the last update against the configured staleness threshold for that asset.",
+      "file": "cap-contracts/contracts/oracle/PriceOracle.sol",
+      "highlight": [
+        {
+          "start": 95,
+          "end": 97
+        }
+      ],
+      "title": "",
+      "id": "57923"
+    },
+    {
+      "type": "mcq",
+      "description": "A call is made to `getPrice(address _asset)`. According to the implementation in `PriceOracle.sol`, under which of the following scenarios will the call revert with `PriceError(_asset)`?\n\nOptions:\n\n A). The primary oracle returns a price of 0, but the backup oracle returns a valid, non-stale price.\n\nB). The primary oracle returns a valid, non-stale price, and the backup oracle returns a stale price.\n\nC). The primary oracle returns a stale price, and the backup oracle subsequently returns a price of 0.\n\nD). The staticcall to the primary adapter fails, but the staticcall to the backup adapter returns a valid, non-stale price.\n\n\nCorrect: C). The primary oracle returns a stale price, and the backup oracle subsequently returns a price of 0.\n\nExplanation: The `getPrice` function reverts with `PriceError` only if the fallback logic is exhausted. This happens if the primary oracle fails (returns 0 or is stale), AND the backup oracle also fails (returns 0 or is stale). Option C describes a scenario where the primary is stale (triggering the fallback) and the backup returns 0 (triggering the final revert). The other scenarios describe cases where the fallback mechanism would successfully prevent a revert.",
+      "title": "",
+      "id": "57930",
+      "text": "A call is made to `getPrice(address _asset)`. According to the implementation in `PriceOracle.sol`, under which of the following scenarios will the call revert with `PriceError(_asset)`?",
+      "answers": [
+        "The primary oracle returns a price of 0, but the backup oracle returns a valid, non-stale price.",
+        "The primary oracle returns a valid, non-stale price, and the backup oracle returns a stale price.",
+        "The primary oracle returns a stale price, and the backup oracle subsequently returns a price of 0.",
+        "The staticcall to the primary adapter fails, but the staticcall to the backup adapter returns a valid, non-stale price."
+      ],
+      "correct": 2,
+      "explanation": "The `getPrice` function reverts with `PriceError` only if the fallback logic is exhausted. This happens if the primary oracle fails (returns 0 or is stale), AND the backup oracle also fails (returns 0 or is stale). Option C describes a scenario where the primary is stale (triggering the fallback) and the backup returns 0 (triggering the final revert). The other scenarios describe cases where the fallback mechanism would successfully prevent a revert."
+    },
+    {
+      "type": "textOnly",
+      "description": "Note: The query mentions a `setAdapters` function, but this doesn't exist. Instead, the system uses separate functions to configure primary and backup oracle data for each asset.",
+      "title": "",
+      "id": "57924"
+    },
+    {
+      "type": "highlight",
+      "description": "The `setPriceOracleData` function allows authorized users to configure the primary oracle data for an asset. It stores the adapter address and payload in the `oracleData` mapping, then emits an event for transparency.",
+      "file": "cap-contracts/contracts/oracle/PriceOracle.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 20
+        }
+      ],
+      "title": "",
+      "id": "57925"
+    },
+    {
+      "type": "highlight",
+      "description": "Similarly, `setPriceBackupOracleData` configures the backup oracle data. This dual configuration ensures that if the primary oracle fails, there's always a fallback option available.",
+      "file": "cap-contracts/contracts/oracle/PriceOracle.sol",
+      "highlight": [
+        {
+          "start": 23,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "57926"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/oracle/libraries/ChainlinkAdapter.sol"
+      ],
+      "description": "Now let's look at an example adapter implementation. The `ChainlinkAdapter` shows how external oracle sources can be integrated into the `PriceOracle` system.",
+      "title": "",
+      "id": "57927"
+    },
+    {
+      "type": "highlight",
+      "description": "Note: The query mentions a `getPrice` function in `ChainlinkAdapter`, but the actual function is named `price`. This function fetches data from a **Chainlink** aggregator and normalizes it to 8 decimals. It handles the conversion from **Chainlink**'s signed integer format to `unsigned` (line 18), and adjusts decimal places to ensure consistency across different feeds (lines 19-20).",
+      "file": "cap-contracts/contracts/oracle/libraries/ChainlinkAdapter.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 21
+        }
+      ],
+      "title": "",
+      "id": "57928"
+    },
+    {
+      "type": "textOnly",
+      "description": "This completes our tour of the PriceOracle system. The flexible adapter pattern allows integration with various oracle sources, while the dual-oracle approach with staleness checks ensures reliable price data even when individual oracles fail.",
+      "title": "",
+      "id": "57929"
+    }
+  ]
+}

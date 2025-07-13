@@ -1,0 +1,300 @@
+{
+  "title": "5.1: Vault: Overview",
+  "id": "3073BnkWXNT9zan3cs6M5RFaFneZuJva0noltlrnsz4=",
+  "originalId": 4797,
+  "position": 14,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "# `Vault` Component Overview\n\nLet's explore the `Vault` component, which serves as the central `contract` for managing assets within the protocol. The architecture follows a modular pattern where functionality is split across multiple `contracts` and `libraries` to enable upgrades while maintaining clean separation of concerns.",
+      "title": "",
+      "id": "57277"
+    },
+    {
+      "type": "highlight",
+      "description": "The main `Vault.sol` contract serves as the primary entry point for all vault-related interactions. The inheritance hierarchy shows how `Vault` combines multiple components - it inherits from `Minter` (line 26) for token minting/burning capabilities and `FractionalReserve` (line 27) for yield optimization.",
+      "file": "cap-contracts/contracts/vault/Vault.sol",
+      "highlight": [
+        {
+          "start": 21,
+          "end": 28
+        }
+      ],
+      "title": "",
+      "id": "57278"
+    },
+    {
+      "type": "highlight",
+      "description": "The vault's `mint` function demonstrates how it orchestrates functionality from inherited components. It calls `getMintAmount` to calculate outputs (line 39), delegates core logic to `VaultLogic.mint` (lines 40-51), then handles token minting directly (lines 52-53).",
+      "file": "cap-contracts/contracts/vault/Vault.sol",
+      "highlight": [
+        {
+          "start": 33,
+          "end": 54
+        }
+      ],
+      "title": "",
+      "id": "57279"
+    },
+    {
+      "type": "highlight",
+      "description": "The `Minter.sol` contract provides the core logic for minting and burning `CapToken`s. It's an abstract contract that handles dynamic fee calculations based on asset allocation ratios in the basket.",
+      "file": "cap-contracts/contracts/vault/Minter.sol",
+      "highlight": [
+        {
+          "start": 16,
+          "end": 16
+        }
+      ],
+      "title": "",
+      "id": "57280"
+    },
+    {
+      "type": "highlight",
+      "description": "The minter provides calculation functions for determining output amounts and fees. Lines 44-45 show how it delegates to `MinterLogic.amountOut()` for the actual calculations, demonstrating the separation between contract interfaces and implementation logic.",
+      "file": "cap-contracts/contracts/vault/Minter.sol",
+      "highlight": [
+        {
+          "start": 43,
+          "end": 53
+        }
+      ],
+      "title": "",
+      "id": "57281"
+    },
+    {
+      "type": "highlight",
+      "description": "The `FractionalReserve.sol` contract manages the protocol's fractional reserve system. It puts idle capital to work in external yield-generating vaults while maintaining liquidity reserves for withdrawals and borrows.",
+      "file": "cap-contracts/contracts/vault/FractionalReserve.sol",
+      "highlight": [
+        {
+          "start": 15,
+          "end": 16
+        }
+      ],
+      "title": "",
+      "id": "57282"
+    },
+    {
+      "type": "highlight",
+      "description": "The `divest` function shows how assets are withdrawn from fractional reserve vaults when needed. It calculates the required divest amount including both the withdrawal amount and buffer reserves, demonstrating the capital efficiency strategy.",
+      "file": "cap-contracts/contracts/vault/FractionalReserve.sol",
+      "highlight": [
+        {
+          "start": 87,
+          "end": 99
+        }
+      ],
+      "title": "",
+      "id": "57283"
+    },
+    {
+      "type": "textOnly",
+      "description": "## `Logic Libraries`\n\nThe implementation details are separated into dedicated `logic libraries`. This architectural pattern allows for upgradeable contracts while maintaining clean separation between storage and logic.",
+      "title": "",
+      "id": "57284"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultLogic.sol` contains the core vault implementation logic as a library. It handles all the business logic for minting, burning, borrowing, and repaying operations while the main contract focuses on access control and state management.",
+      "file": "cap-contracts/contracts/vault/libraries/VaultLogic.sol",
+      "highlight": [
+        {
+          "start": 15,
+          "end": 17
+        }
+      ],
+      "title": "",
+      "id": "57285"
+    },
+    {
+      "type": "highlight",
+      "description": "The `mint` function showcases the **library pattern**. It performs all validation (lines 121-125), updates storage (line 127), handles token transfers (line 129), and emits events (line 131). Notice the modifiers on lines 117-119 that enforce **business rules**.",
+      "file": "cap-contracts/contracts/vault/libraries/VaultLogic.sol",
+      "highlight": [
+        {
+          "start": 116,
+          "end": 132
+        }
+      ],
+      "title": "",
+      "id": "57286"
+    },
+    {
+      "type": "highlight",
+      "description": "`MinterLogic.sol` implements the complex fee calculation logic for minting and burning operations. It determines output amounts based on oracle prices and applies dynamic fees using kinked slope models.",
+      "file": "cap-contracts/contracts/vault/libraries/MinterLogic.sol",
+      "highlight": [
+        {
+          "start": 13,
+          "end": 13
+        }
+      ],
+      "title": "",
+      "id": "57287"
+    },
+    {
+      "type": "highlight",
+      "description": "The `_applyFeeSlopes` function implements the **dynamic fee model**. It calculates fees based on how the operation affects **asset allocation ratios**, with higher fees for operations that create **imbalanced portfolios** (lines 127-143).",
+      "file": "cap-contracts/contracts/vault/libraries/MinterLogic.sol",
+      "highlight": [
+        {
+          "start": 119,
+          "end": 149
+        }
+      ],
+      "title": "",
+      "id": "57288"
+    },
+    {
+      "type": "highlight",
+      "description": "`FractionalReserveLogic.sol` handles the **yield optimization strategy** as a library. It manages investments in external `ERC4626` vaults and handles the complexities of divesting funds when liquidity is needed.",
+      "file": "cap-contracts/contracts/vault/libraries/FractionalReserveLogic.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 16
+        }
+      ],
+      "title": "",
+      "id": "57289"
+    },
+    {
+      "type": "highlight",
+      "description": "The `selective divest function` demonstrates sophisticated capital management. It calculates exactly how much to withdraw from yield vaults (lines 90-96) and handles edge cases like insufficient vault balances (lines 97-101).",
+      "file": "cap-contracts/contracts/vault/libraries/FractionalReserveLogic.sol",
+      "highlight": [
+        {
+          "start": 84,
+          "end": 108
+        }
+      ],
+      "title": "",
+      "id": "57290"
+    },
+    {
+      "type": "mcq",
+      "description": "The Vault architecture separates contracts like `Vault.sol` from their implementation in logic libraries like `VaultLogic.sol`. What is the primary architectural purpose of this design pattern?\n\nOptions:\n\n A). To enable upgradeable logic, allowing the main contract's implementation to be replaced without data migration.\n\nB). To minimize transaction gas costs by using `external` library calls instead of `internal` functions.\n\nC). To create a security boundary preventing logic libraries from directly modifying the `Vault`'s state.\n\nD). To simplify unit testing by allowing logic to be tested without deploying the full `Vault` contract.\n\n\nCorrect: A). To enable upgradeable logic, allowing the main contract's implementation to be replaced without data migration.\n\nExplanation: The correct answer is that this pattern enables upgradeable logic. By separating the state (in `Vault.sol`) from the implementation (in `VaultLogic.sol`), the logic contract's address can be updated in the future, effectively upgrading the system's functionality without losing the existing contract state or address.\n\nWhile this separation can aid in testing, it is a secondary benefit, not the primary architectural driver. The pattern does not inherently reduce gas costs, and the logic libraries are explicitly designed to modify the vault's state via a storage pointer, so they do not create a security boundary in that sense.",
+      "title": "",
+      "id": "57301",
+      "text": "The Vault architecture separates contracts like `Vault.sol` from their implementation in logic libraries like `VaultLogic.sol`. What is the primary architectural purpose of this design pattern?",
+      "answers": [
+        "To enable upgradeable logic, allowing the main contract's implementation to be replaced without data migration.",
+        "To minimize transaction gas costs by using `external` library calls instead of `internal` functions.",
+        "To create a security boundary preventing logic libraries from directly modifying the `Vault`'s state.",
+        "To simplify unit testing by allowing logic to be tested without deploying the full `Vault` contract."
+      ],
+      "correct": 0,
+      "explanation": "The correct answer is that this pattern enables upgradeable logic. By separating the state (in `Vault.sol`) from the implementation (in `VaultLogic.sol`), the logic contract's address can be updated in the future, effectively upgrading the system's functionality without losing the existing contract state or address.\n\nWhile this separation can aid in testing, it is a secondary benefit, not the primary architectural driver. The pattern does not inherently reduce gas costs, and the logic libraries are explicitly designed to modify the vault's state via a storage pointer, so they do not create a security boundary in that sense."
+    },
+    {
+      "type": "textOnly",
+      "description": "## Storage Architecture\n\nThe storage architecture uses dedicated utility contracts that define data structures and provide access patterns. This enables clean upgrades and prevents storage slot conflicts.",
+      "title": "",
+      "id": "57291"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultStorageUtils.sol` defines the storage layout and access patterns for vault data. It uses **EIP-7201** storage namespacing (line 11) to prevent storage collisions and accesses the storage pointer using assembly (lines 16-18).",
+      "file": "cap-contracts/contracts/storage/VaultStorageUtils.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 19
+        }
+      ],
+      "title": "",
+      "id": "57292"
+    },
+    {
+      "type": "highlight",
+      "description": "`MinterStorageUtils.sol` provides storage access for minter-related data including fee configurations and whitelisting information, following the same **EIP-7201** pattern.",
+      "file": "cap-contracts/contracts/storage/MinterStorageUtils.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 19
+        }
+      ],
+      "title": "",
+      "id": "57293"
+    },
+    {
+      "type": "highlight",
+      "description": "`FractionalReserveStorageUtils.sol` manages storage for fractional reserve data including vault mappings, reserve levels, and loaned amounts using the same standardized storage access pattern.",
+      "file": "cap-contracts/contracts/storage/FractionalReserveStorageUtils.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 24
+        }
+      ],
+      "title": "",
+      "id": "57294"
+    },
+    {
+      "type": "textOnly",
+      "description": "## Public API Interfaces\n\nThe interfaces define the `external API` and data structures, providing clear contracts for external integrations and documentation of system capabilities.",
+      "title": "",
+      "id": "57295"
+    },
+    {
+      "type": "highlight",
+      "description": "`IVault.sol` defines the complete public API for the vault system. The `VaultStorage` struct shows the core data model - assets using `EnumerableSet` (line 19), supply/borrow mappings (lines 20-21), and utilization tracking (lines 22-23).",
+      "file": "cap-contracts/contracts/interfaces/IVault.sol",
+      "highlight": [
+        {
+          "start": 18,
+          "end": 26
+        }
+      ],
+      "title": "",
+      "id": "57296"
+    },
+    {
+      "type": "highlight",
+      "description": "The interface defines key operations like `mint` which shows the standard pattern of asset input, minimum output protection, receiver specification, and deadline enforcement for secure DeFi interactions.",
+      "file": "cap-contracts/contracts/interfaces/IVault.sol",
+      "highlight": [
+        {
+          "start": 87,
+          "end": 89
+        }
+      ],
+      "title": "",
+      "id": "57297"
+    },
+    {
+      "type": "highlight",
+      "description": "`IMinter.sol` defines the minting system interface. The **FeeData** struct configures the dynamic fee model with multiple slopes and kink points that create a sophisticated fee curve based on portfolio balance effects.",
+      "file": "cap-contracts/contracts/interfaces/IMinter.sol",
+      "highlight": [
+        {
+          "start": 27,
+          "end": 34
+        }
+      ],
+      "title": "",
+      "id": "57298"
+    },
+    {
+      "type": "highlight",
+      "description": "`IFractionalReserve.sol` defines the yield optimization interface. The `FractionalReserveStorage` struct manages yield strategy data - loaned amounts (line 18), reserve levels (line 19), and vault mappings (lines 20-21).",
+      "file": "cap-contracts/contracts/interfaces/IFractionalReserve.sol",
+      "highlight": [
+        {
+          "start": 16,
+          "end": 22
+        }
+      ],
+      "title": "",
+      "id": "57299"
+    },
+    {
+      "type": "textOnly",
+      "description": "## Summary\n\nThe Vault component demonstrates a sophisticated modular architecture where the main `Vault` contract orchestrates functionality from `Minter` and `FractionalReserve` components. The separation of logic into libraries and storage into utility contracts enables upgradeability while maintaining clean code organization. The comprehensive interface definitions provide clear external APIs for system integration.",
+      "title": "",
+      "id": "57300"
+    }
+  ]
+}

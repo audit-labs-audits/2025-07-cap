@@ -1,0 +1,313 @@
+{
+  "title": "3.1: Tokens: Overview",
+  "id": "w4JXfxB5xy+QKAKx14NIYiBqfCwA+pFCVzQgt0+FPDs=",
+  "originalId": 4785,
+  "position": 5,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Welcome to the Cap Labs Token Architecture walkthrough! We'll explore the five main token contracts and their supporting interfaces, examining how they work together to create a comprehensive DeFi ecosystem with cross-chain capabilities.",
+      "title": "",
+      "id": "57714"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/token/CapToken.sol"
+      ],
+      "description": "Let's start with **`CapToken.sol`** - the core vault token. This contract combines UUPS upgradeability with vault functionality. Notice how it inherits from both `UUPSUpgradeable` and `Vault`, making it an upgradeable token representing shares of underlying assets.",
+      "title": "",
+      "id": "57715"
+    },
+    {
+      "type": "highlight",
+      "description": "The `CapToken` contract declaration shows the inheritance pattern. It's both upgradeable (**UUPS**) and a vault token. The `constructor` disables `initializers` to prevent direct initialization, which is standard for upgradeable contracts.",
+      "file": "cap-contracts/contracts/token/CapToken.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 15
+        }
+      ],
+      "title": "",
+      "id": "57716"
+    },
+    {
+      "type": "highlight",
+      "description": "The `initialize` function shows how `CapToken` is configured. It takes parameters for token metadata, access control, fee auction, oracle, supported assets, and insurance fund. The actual vault logic is delegated to the parent `Vault` contract through `__Vault_init`.",
+      "file": "cap-contracts/contracts/token/CapToken.sol",
+      "highlight": [
+        {
+          "start": 24,
+          "end": 35
+        }
+      ],
+      "title": "",
+      "id": "57717"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/token/StakedCap.sol"
+      ],
+      "description": "Now let's examine `StakedCap.sol` - the yield-bearing staking vault. This is a more complex contract that implements **ERC-4626** with a unique reward vesting mechanism. Users can stake `CapTokens` here to earn yield that's distributed over time.",
+      "title": "",
+      "id": "57718"
+    },
+    {
+      "type": "highlight",
+      "description": "StakedCap inherits from multiple contracts: `IStakedCap` interface, `UUPSUpgradeable` for upgrades, `ERC4626Upgradeable` for vault functionality, `ERC20PermitUpgradeable` for permit support, `Access` for permissions, and `StakedCapStorageUtils` for custom storage.",
+      "file": "cap-contracts/contracts/token/StakedCap.sol",
+      "highlight": [
+        {
+          "start": 22,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "57719"
+    },
+    {
+      "type": "highlight",
+      "description": "The `notify()` function is key to the vesting mechanism. It can be called by anyone to start the linear unlock of new yield. It prevents being called too frequently (line 51) and calculates the difference between current balance and stored total to determine new yield (lines 53-55).",
+      "file": "cap-contracts/contracts/token/StakedCap.sol",
+      "highlight": [
+        {
+          "start": 49,
+          "end": 63
+        }
+      ],
+      "title": "",
+      "id": "57720"
+    },
+    {
+      "type": "highlight",
+      "description": "The vesting math happens in `lockedProfit()` and `totalAssets()`. Line 86 shows the **linear vesting formula**: remaining locked profit decreases linearly over time. Line 91 shows how total assets exclude locked profit, so users can't access unvested yield.",
+      "file": "cap-contracts/contracts/token/StakedCap.sol",
+      "highlight": [
+        {
+          "start": 81,
+          "end": 92
+        }
+      ],
+      "title": "",
+      "id": "57721"
+    },
+    {
+      "type": "mcq",
+      "description": "In `StakedCap.sol`, what is the primary purpose of the `notify()` function?\n\nOptions:\n\n A). To allow users to deposit their CapTokens into the staking vault.\n\nB). To immediately distribute all accumulated yield to stakers.\n\nC). To acknowledge newly deposited yield and initiate its linear vesting period.\n\nD). To prevent any withdrawals while rewards are being calculated.\n\n\nCorrect: C). To acknowledge newly deposited yield and initiate its linear vesting period.\n\nExplanation: The correct answer is that `notify()` acknowledges new yield and starts the vesting period. The function calculates the difference between the current token balance and the `storedTotal`, setting this `diff` as the new `totalLocked` amount to be vested over the `lockDuration`. It does not handle user deposits (that's `deposit`), nor does it distribute yield immediately (it locks it for vesting).",
+      "title": "",
+      "id": "57739",
+      "text": "In `StakedCap.sol`, what is the primary purpose of the `notify()` function?",
+      "answers": [
+        "To allow users to deposit their CapTokens into the staking vault.",
+        "To immediately distribute all accumulated yield to stakers.",
+        "To acknowledge newly deposited yield and initiate its linear vesting period.",
+        "To prevent any withdrawals while rewards are being calculated."
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is that `notify()` acknowledges new yield and starts the vesting period. The function calculates the difference between the current token balance and the `storedTotal`, setting this `diff` as the new `totalLocked` amount to be vested over the `lockDuration`. It does not handle user deposits (that's `deposit`), nor does it distribute yield immediately (it locks it for vesting)."
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/token/L2Token.sol"
+      ],
+      "description": "`L2Token.sol` is a simple wrapper around `OFTPermit` for L2 deployments. It's essentially a constructor-only contract that creates LayerZero-compatible tokens for cross-chain bridging.",
+      "title": "",
+      "id": "57722"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/token/OFTPermit.sol"
+      ],
+      "description": "`OFTPermit.sol` is where the **LayerZero** cross-chain magic happens. This abstract contract combines **LayerZero**'s `OFT` (Omnichain Fungible Token) functionality with `ERC20` permit support.",
+      "title": "",
+      "id": "57723"
+    },
+    {
+      "type": "highlight",
+      "description": "`OFTPermit` inherits from `LayerZero`'s `OFTCore`, standard `ERC20`, and `ERC20Permit`. The `constructor` sets up the token with `LayerZero` endpoint integration and permit functionality, enabling gasless approvals.",
+      "file": "cap-contracts/contracts/token/OFTPermit.sol",
+      "highlight": [
+        {
+          "start": 13,
+          "end": 24
+        }
+      ],
+      "title": "",
+      "id": "57724"
+    },
+    {
+      "type": "highlight",
+      "description": "The **_debit_** function handles burning tokens when sending cross-chain. Line 59 shows the key action: tokens are burned on the source chain. The `LayerZero` protocol will mint equivalent tokens on the destination chain.",
+      "file": "cap-contracts/contracts/token/OFTPermit.sol",
+      "highlight": [
+        {
+          "start": 47,
+          "end": 60
+        }
+      ],
+      "title": "",
+      "id": "57725"
+    },
+    {
+      "type": "highlight",
+      "description": "The `_credit` function handles minting tokens when receiving cross-chain transfers. Line 75 mints the tokens on the destination chain. Line 73 shows a safety check - if someone tries to send to `address(0)`, it redirects to the **burn address**.",
+      "file": "cap-contracts/contracts/token/OFTPermit.sol",
+      "highlight": [
+        {
+          "start": 67,
+          "end": 78
+        }
+      ],
+      "title": "",
+      "id": "57726"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/token/OFTLockbox.sol"
+      ],
+      "description": "**`OFTLockbox.sol`** is the **adapter pattern** for bridging existing tokens. Instead of burning/minting like `OFTPemit`, it locks tokens on the source chain and unlocks them on return.",
+      "title": "",
+      "id": "57727"
+    },
+    {
+      "type": "highlight",
+      "description": "`OFTLockbox` inherits from `LayerZero`'s `OFTAdapter`, which implements the **lock/unlock pattern**. It takes an existing `token address` and wraps it for cross-chain bridging without needing to modify the original token contract.",
+      "file": "cap-contracts/contracts/token/OFTLockbox.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 17
+        }
+      ],
+      "title": "",
+      "id": "57728"
+    },
+    {
+      "type": "mcq",
+      "description": "You need to enable cross-chain bridging for an existing, widely-adopted `ERC20` token that cannot be modified. Based on the contracts reviewed, which is the most appropriate tool for this task?\n\nOptions:\n\n A). OFTPermit, because it implements the standard LayerZero burn-and-mint pattern for fungible tokens.\n\nB). OFTLockbox, because it acts as an adapter that locks the original token without requiring any changes to it.\n\nC). L2Token, because it is specifically designed for deploying tokens on L2 networks.\n\nD). CapToken, because it is designed to be the primary, multi-chain token of the ecosystem.\n\n\nCorrect: B). OFTLockbox, because it acts as an adapter that locks the original token without requiring any changes to it.\n\nExplanation: Correct. `OFTLockbox` uses the OFTAdapter pattern. This pattern is designed to wrap an existing token, locking it on the source chain and minting a representative token on the destination. This is the correct choice for a token that cannot be modified. `OFTPermit` and `L2Token` require the token contract itself to have the burn/mint logic, which is not possible here. `CapToken` is the protocol's own vault token, not a generic bridging adapter.",
+      "title": "",
+      "id": "57740",
+      "text": "You need to enable cross-chain bridging for an existing, widely-adopted `ERC20` token that cannot be modified. Based on the contracts reviewed, which is the most appropriate tool for this task?",
+      "answers": [
+        "OFTPermit, because it implements the standard LayerZero burn-and-mint pattern for fungible tokens.",
+        "OFTLockbox, because it acts as an adapter that locks the original token without requiring any changes to it.",
+        "L2Token, because it is specifically designed for deploying tokens on L2 networks.",
+        "CapToken, because it is designed to be the primary, multi-chain token of the ecosystem."
+      ],
+      "correct": 1,
+      "explanation": "Correct. `OFTLockbox` uses the OFTAdapter pattern. This pattern is designed to wrap an existing token, locking it on the source chain and minting a representative token on the destination. This is the correct choice for a token that cannot be modified. `OFTPermit` and `L2Token` require the token contract itself to have the burn/mint logic, which is not possible here. `CapToken` is the protocol's own vault token, not a generic bridging adapter."
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/interfaces/ICapToken.sol"
+      ],
+      "description": "Let's examine the **key interfaces**. `ICapToken.sol` combines multiple interfaces to define the **complete `CapToken` functionality**.",
+      "title": "",
+      "id": "57729"
+    },
+    {
+      "type": "highlight",
+      "description": "`ICapToken` extends `IERC20`, `IVault`, `IMinter`, and `IFractionalReserve`. This composition pattern means `CapToken` implements **ERC20** functionality, vault operations, minting capabilities, and fractional reserve features.",
+      "file": "cap-contracts/contracts/interfaces/ICapToken.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 12
+        }
+      ],
+      "title": "",
+      "id": "57730"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/interfaces/IStakedCap.sol"
+      ],
+      "description": "`IStakedCap.sol` defines the interface for the staking vault with its unique vesting mechanism.",
+      "title": "",
+      "id": "57731"
+    },
+    {
+      "type": "highlight",
+      "description": "The `StakedCapStorage` struct holds the vesting state: `storedTotal` tracks total assets including unvested, `totalLocked` is the amount currently vesting, `lastNotify` is the timestamp of the last yield notification, and `lockDuration` is the vesting period.",
+      "file": "cap-contracts/contracts/interfaces/IStakedCap.sol",
+      "highlight": [
+        {
+          "start": 13,
+          "end": 18
+        }
+      ],
+      "title": "",
+      "id": "57732"
+    },
+    {
+      "type": "highlight",
+      "description": "The key functions are `notify()` to start vesting new yield and `lockedProfit()` to check how much yield is still locked. The vesting mechanism ensures yield is distributed gradually rather than all at once.",
+      "file": "cap-contracts/contracts/interfaces/IStakedCap.sol",
+      "highlight": [
+        {
+          "start": 32,
+          "end": 37
+        }
+      ],
+      "title": "",
+      "id": "57733"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/interfaces/IStakerRewards.sol"
+      ],
+      "description": "**`IStakerRewards.sol`** defines the rewards distribution interface. While `StakedCap` doesn't directly implement this, an external rewards controller uses this interface to deposit yield into the staking system.",
+      "title": "",
+      "id": "57734"
+    },
+    {
+      "type": "highlight",
+      "description": "The `distributeRewards` function is how external systems (like lending protocols) can deposit yield that eventually flows to stakers. The interface supports network-specific rewards and arbitrary data for flexibility.",
+      "file": "cap-contracts/contracts/interfaces/IStakerRewards.sol",
+      "highlight": [
+        {
+          "start": 15,
+          "end": 20
+        }
+      ],
+      "title": "",
+      "id": "57735"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/storage/StakedCapStorageUtils.sol"
+      ],
+      "description": "Finally, `StakedCapStorageUtils.sol` shows how upgradeable contracts safely manage storage to avoid storage collisions.",
+      "title": "",
+      "id": "57736"
+    },
+    {
+      "type": "highlight",
+      "description": "The storage location is calculated using a specific `keccak256` hash (line 11-12) to ensure it doesn't collide with other contract storage. Line 17-19 shows **inline assembly** to access this custom storage slot - this is the standard pattern for **upgradeable contracts**.",
+      "file": "cap-contracts/contracts/storage/StakedCapStorageUtils.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 20
+        }
+      ],
+      "title": "",
+      "id": "57737"
+    },
+    {
+      "type": "textOnly",
+      "description": "## Summary\n\nWe've explored **Core Vault**: `CapToken` provides upgradeable vault functionality for underlying assets\n\n**Staking Vault**: `StakedCap` implements `ERC-4626` with linear yield vesting to prevent yield dumping\n\n**Cross-chain Adapters**: `L2Token`, `OFTPermit`, and `OFTLockbox` enable `LayerZero`-powered bridging with different patterns (`mint/burn` vs `lock/unlock`)\n\n**Supporting Infrastructure**: Interfaces and storage utilities ensure clean architecture and upgrade safety\n\nNext tours will dive deeper into the vault mechanics, vesting mathematics, and cross-chain bridging implementations.",
+      "title": "",
+      "id": "57738"
+    }
+  ]
+}

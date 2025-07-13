@@ -1,0 +1,133 @@
+{
+  "title": "2.2: Deep Dive into `AccessControl.sol`",
+  "id": "YYFOGnpuzIaTL1ShX0/gRUJMZ0gh9UWduDfn0yxhK3o=",
+  "originalId": 4789,
+  "position": 3,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Let's take a deep dive into the `AccessControl.sol` contract, exploring how it implements granular permission management for the Cap Protocol. We'll examine its inheritance structure, role creation mechanism, and core access control logic.",
+      "title": "",
+      "id": "57183"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "cap-contracts/contracts/access/AccessControl.sol"
+      ],
+      "description": "The AccessControl contract is the central hub for managing permissions across the Cap Protocol. It provides granular access control for each function on each contract.",
+      "title": "",
+      "id": "57184"
+    },
+    {
+      "type": "highlight",
+      "description": "The contract inherits from two key OpenZeppelin contracts. `AccessControlEnumerableUpgradeable` provides role-based access control with enumeration capabilities, allowing you to list all addresses with a specific role. `UUPSUpgradeable` enables the contract to be upgraded using the Universal Upgradeable Proxy Standard (UUPS) pattern.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 12
+        }
+      ],
+      "title": "",
+      "id": "57185"
+    },
+    {
+      "type": "highlight",
+      "description": "The heart of the access control system is the `role` function. It creates unique role identifiers by combining a function selector and contract address using a bitwise OR operation. The function selector (4 bytes) is cast to bytes32 and combined with the contract address (20 bytes, zero-padded to 32 bytes). This ensures each function on each contract has a unique role identifier.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 50,
+          "end": 52
+        }
+      ],
+      "title": "",
+      "id": "57186"
+    },
+    {
+      "type": "highlight",
+      "description": "During initialization, the contract grants the admin three critical roles. First, the `DEFAULT_ADMIN_ROLE` provides broad administrative powers. Then it grants specific roles for `grantAccess` and `revokeAccess` functions on this contract itself, ensuring the admin can manage permissions.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 19,
+          "end": 24
+        }
+      ],
+      "title": "",
+      "id": "57187"
+    },
+    {
+      "type": "highlight",
+      "description": "The `grantAccess` function demonstrates how the role system works in practice. Line 28 checks that the caller has permission to grant access (using `_checkRole`), and line 29 grants the requested role to the target address using the inherited `_grantRole` function.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 27,
+          "end": 30
+        }
+      ],
+      "title": "",
+      "id": "57188"
+    },
+    {
+      "type": "highlight",
+      "description": "The `revokeAccess` function includes additional safety logic. Lines 38-39 prevent users from revoking their own revocation permissions, which would create a deadlock scenario. This ensures that someone with revoke permissions can't accidentally lock themselves out of the system.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 33,
+          "end": 41
+        }
+      ],
+      "title": "",
+      "id": "57189"
+    },
+    {
+      "type": "highlight",
+      "description": "The `checkAccess` function provides a view-only way to verify permissions. It uses the same `_checkRole` mechanism but returns a boolean instead of reverting, making it suitable for external queries and UI integrations.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 44,
+          "end": 47
+        }
+      ],
+      "title": "",
+      "id": "57190"
+    },
+    {
+      "type": "highlight",
+      "description": "The `_authorizeUpgrade` function protects contract upgrades with the `onlyRole(DEFAULT_ADMIN_ROLE)` modifier. This ensures only addresses with the highest level of administrative privileges can upgrade the contract, providing a critical security boundary.",
+      "file": "cap-contracts/contracts/access/AccessControl.sol",
+      "highlight": [
+        {
+          "start": 55,
+          "end": 55
+        }
+      ],
+      "title": "",
+      "id": "57191"
+    },
+    {
+      "type": "highlight",
+      "description": "Here's a practical example from the test suite showing how access control is used. The admin grants permission to a borrower to call the `borrow` function on the `cUSD` contract. Notice how the `grantAccess` call specifies the exact function selector, contract address, and the address receiving the permission.",
+      "file": "cap-contracts/test/vault/Vault.fractional.t.sol",
+      "highlight": [
+        {
+          "start": 26,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "57192"
+    },
+    {
+      "type": "textOnly",
+      "description": "This access control system provides fine-grained security by requiring explicit permission for each function on each contract. The bitwise role creation ensures uniqueness, while the inherited OpenZeppelin functions provide battle-tested security guarantees. The upgrade protection and self-revocation prevention add additional layers of safety to the system.",
+      "title": "",
+      "id": "57193"
+    }
+  ]
+}
